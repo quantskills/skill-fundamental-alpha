@@ -1,0 +1,4 @@
+panda_data>=0.1.0
+pandas>=2.0.0
+numpy>=1.22
+PyPDF2>=3.0.0

@@ -1,0 +1,22 @@
+---
+description: Use the Fundamental Alpha skill to generate alpha factors from fundamental data (financial statements, valuation, quality, growth, cash flow, forecasts, ownership).
+alwaysApply: false
+---
+
+# Fundamental Alpha Skill
+
+When the user asks to generate fundamental alpha factors, value/quality/growth
+signals, or any document/query about financial-statement-based strategies:
+
+1. Read `SKILL.md` at this skill root for full instructions.
+2. Read `references/fundamental_ops.md` for the formula contract.
+3. Ensure `.env` has PandaData credentials.
+4. Run `scripts/fetch_fundamental_data.py` →
+   `scripts/build_pit_fundamentals.py` →
+   `scripts/generate_fundamental_alphas.py` →
+   `scripts/validate_fundamental_alphas.py` in sequence.
+5. Present validated alphas with source attribution and PIT audit info.
+
+Always prefer `rank()` and `zscore()` based expressions for numerical stability.
+Never use `log()` without clamping, never divide without zero-guarding, and
+never use `delay/delta/returns` with n < 1 (point-in-time discipline).

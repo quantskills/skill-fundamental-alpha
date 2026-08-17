@@ -1,0 +1,7 @@
+name: fundamental-alpha
+description: Generate alpha factor expressions from fundamental data using PandaData. Takes documents, URLs, or natural language queries as input and produces validated point-in-time alpha expressions across value, quality, growth, cash-flow, forecast, and ownership families.
+tools:
+  - run
+  - read
+model: inherit
+color: "#1B5E20"

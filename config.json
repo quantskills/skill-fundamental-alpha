@@ -1,0 +1,22 @@
+{
+  "_note": "Default parameters. Scripts read this file first, then CLI args override. Change values here to set your preferred defaults.",
+  "universe": "000300",
+  "_universe_help": "Stock universe: 000300=CSI300, 000905=CSI500, 000852=CSI1000, 000016=SSE50.",
+  "start_date": "20240101",
+  "_start_date_help": "Start date (YYYYMMDD) for daily factor + market data.",
+  "end_date": "20250801",
+  "_end_date_help": "End date (YYYYMMDD).",
+  "start_quarter": "2021q1",
+  "_start_quarter_help": "Start quarter (YYYYqN) for statement history. TTM and YoY need at least 9 quarters.",
+  "end_quarter": "2025q2",
+  "_end_quarter_help": "End quarter (YYYYqN) for statement history.",
+  "pit_lag_days": 1,
+  "_pit_lag_days_help": "Extra calendar days after a filing/announcement date before its data counts as known (0 = usable from the filing date itself).",
+  "max_alphas": 5,
+  "_max_alphas_help": "Default number of alphas per run.",
+  "nan_threshold": 0.1,
+  "_nan_threshold_help": "Max NaN ratio before flagging expression.",
+  "extreme_threshold": 5.0,
+  "_extreme_threshold_help": "Max z-score before flagging instability.",
+  "output_dir": "output"
+}

@@ -1,0 +1,134 @@
+{
+  "_schema": "1.0",
+  "_description": "Complete catalog of fundamental fields in the point-in-time panel (fundamentals.csv). Every alpha expression must use only these field names (or custom features declared via new_features). The pit_rule on each field records how point-in-time correctness is guaranteed.",
+  "_note": "Field names are exactly the column names of fundamentals.csv produced by build_pit_fundamentals.py.",
+
+  "raw_inputs": {
+    "statements": {
+      "api": "get_financial_ex",
+      "pit": "Quarterly IS/BS/CF statements. PIT join uses the filing date column (date) + pit_lag_days. A quarter's value known at time t is the latest filing for that quarter with filing date <= t."
+    },
+    "precomputed_factors": {
+      "api": "get_factor",
+      "pit": "ratio_*/cfd_*/fin_* and *_mrq_n fields. Point-in-time by construction: each value is the factor value as of the query date."
+    },
+    "market_data": {
+      "api": "get_market_data",
+      "pit": "Daily OHLCV used only for panel skeleton and market-cap denominator."
+    },
+    "forecast": {
+      "api": "get_financial_forecast",
+      "pit": "Earnings pre-announcements. PIT join on info_date + pit_lag_days."
+    },
+    "holder_count": {
+      "api": "get_holder_count (docs: get_holder_number)",
+      "pit": "Shareholder counts. PIT join on announcement date + pit_lag_days."
+    },
+    "repurchase": {
+      "api": "get_buy_back (docs: get_repurchase)",
+      "pit": "Buyback events. PIT join on event date + pit_lag_days."
+    }
+  },
+
+  "conventions": {
+    "a_share_cumulative": "A-share quarterly income statement items are year-to-date cumulative within the fiscal year (Q4 = full year). TTM = FY(t-1) + YTD(t) - YTD(t-1); for Q4, TTM = Q4 value.",
+    "mrq": "get_factor *_mrq_n fields give the value of the n-th latest financial report known as of the query date (mrq_1 = latest report). They are PIT by construction.",
+    "units": "ratios are plain ratios unless noted; fc_* growth fields are percentages; buyback_value_ttm is CNY."
+  },
+
+  "features": {
+    "mktcap": {
+      "family": "valuation",
+      "formula": "ratio_market_cap_total",
+      "description": "Total market capitalization (CNY). Use as a size denominator or size factor.",
+      "source": "get_factor",
+      "pit_rule": "point-in-time by construction",
+      "unit": "CNY"
+    },
+    "pe_ttm": {"family": "valuation", "formula": "price / eps_ttm", "description": "Price-to-earnings ratio (TTM). High = expensive.", "source": "get_factor ratio_pe_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "pe_lyr": {"family": "valuation", "formula": "price / eps_lyr", "description": "PE using last fiscal year EPS.", "source": "get_factor ratio_pe_lyr", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "pb_lf": {"family": "valuation", "formula": "price / bvps_lf", "description": "Price-to-book (latest filing).", "source": "get_factor ratio_pb_lf", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "ep_ttm": {"family": "valuation", "formula": "1 / pe_ttm", "description": "Earnings yield (TTM). High = cheap.", "source": "get_factor ratio_ep_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "ep_lyr": {"family": "valuation", "formula": "1 / pe_lyr", "description": "Earnings yield (last fiscal year).", "source": "get_factor ratio_ep_lyr", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "bm_lf": {"family": "valuation", "formula": "1 / pb_lf", "description": "Book-to-market (latest filing). High = value.", "source": "get_factor ratio_bm_lf", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "bm_ttm": {"family": "valuation", "formula": "1 / pb_ttm", "description": "Book-to-market (TTM).", "source": "get_factor ratio_bm_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "sp_ttm": {"family": "valuation", "formula": "1 / ps_ttm", "description": "Sales yield (TTM). High = cheap on sales.", "source": "get_factor ratio_sp_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "ps_ttm": {"family": "valuation", "formula": "mktcap / revenue_ttm", "description": "Price-to-sales (TTM).", "source": "get_factor ratio_ps_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "pcf_ocf_ttm": {"family": "valuation", "formula": "mktcap / ocf_ttm", "description": "Price-to-operating-cash-flow (TTM).", "source": "get_factor ratio_pcf_ocf_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "cfp_ttm": {"family": "valuation", "formula": "1 / pcf_ocf_ttm", "description": "Operating cash-flow yield (TTM).", "source": "get_factor ratio_cfp_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "div_yield_ttm": {"family": "valuation", "formula": "ttm dividends / mktcap", "description": "Dividend yield (TTM, %).", "source": "get_factor ratio_div_yield_ttm", "pit_rule": "point-in-time by construction", "unit": "percent"},
+    "peg_ttm": {"family": "valuation", "formula": "pe_ttm / expected growth", "description": "PEG ratio (TTM). Low = growth is cheap.", "source": "get_factor ratio_peg_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "ev_ebitda_ttm": {"family": "valuation", "formula": "EV / EBITDA_ttm", "description": "Enterprise value multiple (TTM).", "source": "get_factor ratio_ev_ebitda_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "ev_ebitda_lyr": {"family": "valuation", "formula": "EV / EBITDA_lyr", "description": "Enterprise value multiple (last fiscal year).", "source": "get_factor ratio_ev_ebitda_lyr", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "ev_no_cash_ebit_ttm": {"family": "valuation", "formula": "(EV - cash) / EBIT_ttm", "description": "EV excluding cash over EBIT (TTM).", "source": "get_factor ratio_ev_no_cash_ebit_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+
+    "flow_per_share_ttm": {"family": "cashflow", "formula": "total_cashflow_ttm / shares", "description": "Cash flow per share (TTM).", "source": "get_factor cfd_flow_per_share_ttm", "pit_rule": "point-in-time by construction", "unit": "CNY/share"},
+    "ocf_per_share_ttm": {"family": "cashflow", "formula": "ocf_ttm / shares", "description": "Operating cash flow per share (TTM).", "source": "get_factor cfd_ocf_per_share_ttm", "pit_rule": "point-in-time by construction", "unit": "CNY/share"},
+    "fcff_ttm": {"family": "cashflow", "formula": "OCF - capex (TTM)", "description": "Free cash flow to firm (TTM, CNY).", "source": "get_factor cfd_fcff_ttm", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "fcfe_ttm": {"family": "cashflow", "formula": "FCFF - net debt service (TTM)", "description": "Free cash flow to equity (TTM, CNY).", "source": "get_factor cfd_fcfe_ttm", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "fcff_per_share_ttm": {"family": "cashflow", "formula": "fcff_ttm / shares", "description": "FCFF per share (TTM).", "source": "get_factor cfd_fcff_per_share_ttm", "pit_rule": "point-in-time by construction", "unit": "CNY/share"},
+    "fcfe_per_share_ttm": {"family": "cashflow", "formula": "fcfe_ttm / shares", "description": "FCFE per share (TTM).", "source": "get_factor cfd_fcfe_per_share_ttm", "pit_rule": "point-in-time by construction", "unit": "CNY/share"},
+    "ocf_to_debt_ttm": {"family": "cashflow", "formula": "ocf_ttm / total_liab", "description": "Operating cash flow coverage of total debt. High = safer.", "source": "get_factor cfd_ocf_to_debt_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "ocf_to_net_debt_ttm": {"family": "cashflow", "formula": "ocf_ttm / net debt", "description": "OCF coverage of net debt.", "source": "get_factor cfd_ocf_to_net_debt_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "ocf_to_int_debt_ttm": {"family": "cashflow", "formula": "ocf_ttm / interest-bearing debt", "description": "OCF coverage of interest-bearing debt.", "source": "get_factor cfd_ocf_to_int_debt_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "ocf_to_cur_liab_ttm": {"family": "cashflow", "formula": "ocf_ttm / current liabilities", "description": "OCF coverage of current liabilities.", "source": "get_factor cfd_ocf_to_cur_liab_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "surplus_cash_multi_ttm": {"family": "cashflow", "formula": "ocf_ttm / ni_ttm", "description": "Surplus cash multiple: cash generated per unit of profit. >1 = high earnings quality.", "source": "get_factor cfd_surplus_cash_multi_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "ebitda_to_int_ttm": {"family": "cashflow", "formula": "ebitda_ttm / interest expense", "description": "Interest coverage ratio (TTM).", "source": "get_factor cfd_ebitda_to_int_ttm", "pit_rule": "point-in-time by construction", "unit": "ratio"},
+    "depr_amort_ttm": {"family": "cashflow", "formula": "depreciation + amortization (TTM)", "description": "Depreciation and amortization (TTM, CNY).", "source": "get_factor cfd_depr_amort_ttm", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+
+    "int_debt_lf": {"family": "capital", "formula": "interest-bearing debt (latest filing)", "description": "Interest-bearing debt (CNY).", "source": "get_factor fin_int_debt_lf", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "int_debt_ttm": {"family": "capital", "formula": "interest-bearing debt (TTM)", "description": "Interest-bearing debt, TTM view (CNY).", "source": "get_factor fin_int_debt_ttm", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "non_int_cur_liab_lf": {"family": "capital", "formula": "current liabilities - interest-bearing current debt", "description": "Non-interest-bearing current liabilities (CNY).", "source": "get_factor fin_non_int_cur_liab_lf", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "non_int_ncl_lf": {"family": "capital", "formula": "non-current liabilities - interest-bearing NCL", "description": "Non-interest-bearing non-current liabilities (CNY).", "source": "get_factor fin_non_int_ncl_lf", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "cap_reserve_per_share_lf": {"family": "capital", "formula": "capital reserve / shares", "description": "Capital reserve per share (CNY).", "source": "get_factor fin_cap_reserve_per_share_lf", "pit_rule": "point-in-time by construction", "unit": "CNY/share"},
+    "earned_reserve_per_share_lf": {"family": "capital", "formula": "earned surplus reserve / shares", "description": "Earned surplus reserve per share (CNY).", "source": "get_factor fin_earned_reserve_per_share_lf", "pit_rule": "point-in-time by construction", "unit": "CNY/share"},
+    "undistr_profit_per_share_lf": {"family": "capital", "formula": "undistributed profit / shares", "description": "Undistributed profit per share (CNY).", "source": "get_factor fin_undistr_profit_per_share_lf", "pit_rule": "point-in-time by construction", "unit": "CNY/share"},
+
+    "revenue_ttm": {"family": "statement", "formula": "TTM(is_total_revenue)", "description": "Trailing-12-month operating revenue (CNY). A-share cumulative convention.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "CNY"},
+    "ni_ttm": {"family": "statement", "formula": "TTM(is_n_income_attr_p)", "description": "Trailing-12-month net profit attributable to parent (CNY).", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "CNY"},
+    "ocf_ttm": {"family": "statement", "formula": "TTM(cfs_net_cash_operating)", "description": "Trailing-12-month operating cash flow (CNY).", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "CNY"},
+    "eps_ttm": {"family": "statement", "formula": "TTM(is_basic_eps)", "description": "Trailing-12-month basic EPS (CNY).", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "CNY"},
+    "equity": {"family": "statement", "formula": "bs_total_hldr_eqy_exc_min_int (latest filing)", "description": "Equity attributable to parent (CNY).", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "CNY"},
+    "total_assets": {"family": "statement", "formula": "bs_total_assets (latest filing)", "description": "Total assets (CNY).", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "CNY"},
+    "total_liab": {"family": "statement", "formula": "bs_total_liab (latest filing)", "description": "Total liabilities (CNY).", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "CNY"},
+    "gross_margin": {"family": "statement", "formula": "(rev - oper_cost) / rev", "description": "Gross margin, latest quarter. High = pricing power.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "op_margin": {"family": "statement", "formula": "operate_profit / rev", "description": "Operating margin, latest quarter.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "np_margin": {"family": "statement", "formula": "ni_attr_p / rev", "description": "Net margin, latest quarter.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "roe_ttm": {"family": "statement", "formula": "ni_ttm / equity", "description": "Return on equity (TTM profit / latest equity). High = efficient capital use.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "roa_ttm": {"family": "statement", "formula": "ni_ttm / total_assets", "description": "Return on assets (TTM).", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "accruals_ttm": {"family": "statement", "formula": "(ni_ttm - ocf_ttm) / total_assets", "description": "Accruals scaled by assets (Sloan 1996). High = low earnings quality.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "ocf_to_assets": {"family": "statement", "formula": "ocf_ttm / total_assets", "description": "Cash-flow return on assets (TTM).", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "ocf_to_ni": {"family": "statement", "formula": "ocf_ttm / ni_ttm", "description": "Cash realization of earnings (TTM). >1 = high quality.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "debt_to_assets": {"family": "statement", "formula": "total_liab / total_assets", "description": "Leverage ratio, latest filing.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "current_ratio": {"family": "statement", "formula": "cur_assets / cur_liab", "description": "Current ratio, latest filing.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "cash_to_assets": {"family": "statement", "formula": "money_cap / total_assets", "description": "Cash and equivalents to assets.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "rd_to_revenue": {"family": "statement", "formula": "rd_exp / rev", "description": "R&D intensity, latest quarter.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "goodwill_to_assets": {"family": "statement", "formula": "goodwill / total_assets", "description": "Goodwill intensity. High = M&A overhang.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "rev_yoy": {"family": "statement", "formula": "rev(q,y)/rev(q,y-1) - 1", "description": "Revenue YoY growth, latest quarter (YTD-cumulative convention).", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "ni_yoy": {"family": "statement", "formula": "ni(q,y)/ni(q,y-1) - 1", "description": "Net profit YoY growth, latest quarter.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+    "ocf_yoy": {"family": "statement", "formula": "ocf(q,y)/ocf(q,y-1) - 1", "description": "Operating cash flow YoY growth, latest quarter.", "source": "derived from get_financial_ex", "pit_rule": "asof filing date + pit_lag_days", "unit": "ratio"},
+
+    "ni_mrq1": {"family": "mrq", "formula": "is_n_income_attr_p_mrq_1", "description": "Net profit from the latest report known as of date t (PIT).", "source": "get_factor", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "ni_mrq4": {"family": "mrq", "formula": "is_n_income_attr_p_mrq_4", "description": "Net profit from the report 4 periods before the latest (≈ same quarter last year).", "source": "get_factor", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "rev_mrq1": {"family": "mrq", "formula": "is_total_revenue_mrq_1", "description": "Revenue from the latest report known as of date t (PIT).", "source": "get_factor", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "rev_mrq4": {"family": "mrq", "formula": "is_total_revenue_mrq_4", "description": "Revenue from the report 4 periods before the latest.", "source": "get_factor", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "ocf_mrq1": {"family": "mrq", "formula": "cfs_net_cash_operating_mrq_1", "description": "Operating cash flow from the latest report known as of date t (PIT).", "source": "get_factor", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "ocf_mrq4": {"family": "mrq", "formula": "cfs_net_cash_operating_mrq_4", "description": "Operating cash flow from the report 4 periods before the latest.", "source": "get_factor", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "eq_mrq1": {"family": "mrq", "formula": "bs_total_hldr_eqy_exc_min_int_mrq_1", "description": "Equity from the latest report known as of date t (PIT).", "source": "get_factor", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "eq_mrq4": {"family": "mrq", "formula": "bs_total_hldr_eqy_exc_min_int_mrq_4", "description": "Equity from the report 4 periods before the latest.", "source": "get_factor", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "assets_mrq1": {"family": "mrq", "formula": "bs_total_assets_mrq_1", "description": "Total assets from the latest report known as of date t (PIT).", "source": "get_factor", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+    "eps_mrq1": {"family": "mrq", "formula": "is_basic_eps_mrq_1", "description": "Basic EPS from the latest report known as of date t (PIT).", "source": "get_factor", "pit_rule": "point-in-time by construction", "unit": "CNY"},
+
+    "fc_np_mid": {"family": "forecast", "formula": "(forecast_np_floor + forecast_np_ceiling) / 2", "description": "Midpoint of the forecast net profit range (CNY).", "source": "derived from get_financial_forecast", "pit_rule": "asof info_date + pit_lag_days", "unit": "CNY"},
+    "fc_eps_mid": {"family": "forecast", "formula": "(forecast_eps_floor + forecast_eps_ceiling) / 2", "description": "Midpoint of the forecast EPS range.", "source": "derived from get_financial_forecast", "pit_rule": "asof info_date + pit_lag_days", "unit": "CNY"},
+    "fc_growth_mid": {"family": "forecast", "formula": "(forecast_growth_rate_floor + forecast_growth_rate_ceiling) / 2", "description": "Midpoint of the forecast profit growth range (%).", "source": "derived from get_financial_forecast", "pit_rule": "asof info_date + pit_lag_days", "unit": "percent"},
+    "fc_width": {"family": "forecast", "formula": "(ceiling - floor) / max(|mid|, eps)", "description": "Relative width of the forecast range. Narrow = confident guidance.", "source": "derived from get_financial_forecast", "pit_rule": "asof info_date + pit_lag_days", "unit": "ratio"},
+    "fc_type_score": {"family": "forecast", "formula": "map(forecast_type)", "description": "Forecast type score: 预增=3, 略增=2, 续盈=1, 扭亏=2.5, 略减=-2, 预减=-3, 首亏=-3, 续亏=-3, 增亏=-3, 减亏=1.5, 不确定=0.", "source": "derived from get_financial_forecast", "pit_rule": "asof info_date + pit_lag_days", "unit": "score"},
+    "fc_revision": {"family": "forecast", "formula": "net_profit_yoy_const_forecast", "description": "Consensus-forecast YoY net profit growth (%).", "source": "derived from get_financial_forecast", "pit_rule": "asof info_date + pit_lag_days", "unit": "percent"},
+
+    "holder_count": {"family": "ownership", "formula": "holders (latest announcement)", "description": "Number of shareholders. Falling count = concentration (often bullish).", "source": "get_holder_count", "pit_rule": "asof announcement date + pit_lag_days", "unit": "count"},
+    "holder_change_yoy": {"family": "ownership", "formula": "holder_count / holder_count(≈1y ago) - 1", "description": "YoY change in shareholder count. Negative = chip concentration.", "source": "derived from get_holder_count", "pit_rule": "asof announcement date + pit_lag_days", "unit": "ratio"},
+    "buyback_value_ttm": {"family": "ownership", "formula": "sum(buy_back_value, last 365d)", "description": "Buyback amount over the trailing year (CNY). High = management confidence.", "source": "derived from get_buy_back", "pit_rule": "asof event date + pit_lag_days", "unit": "CNY"},
+    "buyback_percent": {"family": "ownership", "formula": "buy_back_percent (latest event)", "description": "Latest buyback program size as % of share capital.", "source": "derived from get_buy_back", "pit_rule": "asof event date + pit_lag_days", "unit": "percent"}
+  }
+}
