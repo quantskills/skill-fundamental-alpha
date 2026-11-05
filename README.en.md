@@ -70,7 +70,7 @@ python ../skill-factor-backtest/scripts/run_factor_backtest.py \
 ## Requirements
 
 - Python 3.10+
-- `panda_data>=0.1.0`
+- `panda_data==1.0.6`
 - Valid PandaData credentials in `.env`
 
 ## Parameters (config.json)
@@ -91,3 +91,6 @@ constitute investment advice.
 ## License
 
 GPL-3.0-only
+
+
+Pandadata compatibility maintenance: [abgyjaguo](https://github.com/abgyjaguo). Existing authorship is retained.

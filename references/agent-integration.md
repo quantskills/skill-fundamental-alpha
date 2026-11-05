@@ -11,7 +11,7 @@
 
 ## Prerequisites
 
-1. **Python 3.10+** with `panda_data>=0.1.0`, `pandas`, `numpy`.
+1. **Python 3.10+** with `panda_data==1.0.6`, `pandas`, `numpy`.
 2. **PandaData credentials** in `.env` (see `.env.example`).
 3. **Network access** to `http://pandadata.pandaaiquant.com`.
 

@@ -67,7 +67,7 @@ python ../skill-factor-backtest/scripts/run_factor_backtest.py \
 ## 环境要求
 
 - Python 3.10+
-- `panda_data>=0.1.0`
+- `panda_data==1.0.6`
 - 在 `.env` 中配置有效的 PandaData 凭证
 
 ## 参数（config.json）
@@ -87,3 +87,6 @@ python ../skill-factor-backtest/scripts/run_factor_backtest.py \
 ## 许可证
 
 GPL-3.0-only
+
+
+Pandadata 兼容维护：[abgyjaguo](https://github.com/abgyjaguo)，保留原项目作者署名。

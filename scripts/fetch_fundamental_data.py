@@ -115,7 +115,7 @@ def _init_pandadata() -> None:
     except ImportError:
         print(
             "[FATAL] panda_data is not installed. Install it with:\n"
-            "    pip install panda_data>=0.1.0\n"
+            "    pip install panda_data==1.0.6\n"
             "See requirements.txt for full dependency list.",
             file=sys.stderr,
         )

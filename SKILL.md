@@ -51,7 +51,7 @@ quantSkills:
   validation_level: listed
   maintainer_type: community
   requires:
-    - panda_data>=0.1.0
+    - panda_data==1.0.6
   summary_zh: 基于基本面数据（PandaData）生成Alpha因子表达式，支持从研报/自然语言输入中提取估值、质量、成长、现金流、预期与股东信号，并通过公式合约与PIT面板验证。
   summary_en: Generate alpha factor expressions from fundamental data (PandaData). Accepts a document, URL, natural language query, or model invention and returns validated point-in-time factors.
 ---
@@ -325,3 +325,7 @@ Validate → (correct) → Output
 - `references/fundamental_definitions.json` — field catalog with formulas and PIT rules.
 - `references/operators.json` — operator catalog (add new operators here).
 - `references/agent-integration.md` — install + smoke tests per agent platform.
+
+## Pandadata compatibility
+
+[Pandadata 1.0.6 compatibility](references/pandadata-compatibility.md) — exact SDK baseline, validation scope, and shared guidance for all supported agent runtimes.
